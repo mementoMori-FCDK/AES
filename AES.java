@@ -33,9 +33,11 @@ public class AES {
                 //-----------------------------TEST-------------------------------------------------------
                 // System.out.println("key: " + keyStr);
                 String [] text = textStr.split("\\s+");
-                String [][] initState = initState(text);
-                System.out.println(Arrays.deepToString(initState));
-                SubBytes(initState);
+                System.out.println(Arrays.toString(text));
+                String [][] state = initState(text);
+                System.out.println(Arrays.deepToString(state));
+                state = InvShiftRows(state);
+                System.out.println(Arrays.deepToString(state));
                 //-----------------------------TEST-------------------------------------------------------
             } catch(FileNotFoundException e) {
                 System.out.println("No such file in the directory");
@@ -51,6 +53,63 @@ public class AES {
         return "";
     }
 
+    static String [][] InvShiftRows(String [][] state) {
+        String [][] newState = new String [4][4];
+        for( int r = 0; r < newState.length; r++) {
+            if(r == 1) {
+                newState[r][0] = state[r][3];
+                newState[r][1] = state[r][0];
+                newState[r][2] = state[r][1];
+                newState[r][3] = state[r][2];
+            }
+            else if(r == 2) {
+                newState[r][0] = state[r][2];
+                newState[r][1] = state[r][3];
+                newState[r][2] = state[r][0];
+                newState[r][3] = state[r][1];
+            }
+            else if(r==3) {
+                newState[r][0] = state[r][1];
+                newState[r][1] = state[r][2];
+                newState[r][2] = state[r][3];
+                newState[r][3] = state[r][0];
+            }
+            else{
+                newState[r] = state[r];
+            }
+        }
+        return newState;
+    }
+
+    static String [][] ShiftRows(String [][] state) {
+        String [][] newState = new String [4][4];
+        for( int r = 0; r < newState.length; r++) {
+            if(r == 1) {
+                newState[r][0] = state[r][1];
+                newState[r][1] = state[r][2];
+                newState[r][2] = state[r][3];
+                newState[r][3] = state[r][0];
+            }
+            else if(r == 2) {
+                newState[r][0] = state[r][2];
+                newState[r][1] = state[r][3];
+                newState[r][2] = state[r][0];
+                newState[r][3] = state[r][1];
+            }
+            else if(r==3) {
+                newState[r][0] = state[r][3];
+                newState[r][1] = state[r][0];
+                newState[r][2] = state[r][1];
+                newState[r][3] = state[r][2];
+            }
+            else{
+                newState[r] = state[r];
+            }
+        }
+        
+        return newState;
+    }
+
     static String [][] SubBytes(String [][] state) {
         String [][] newState = new String [4][4];
         String [][] sbox = sbox();
@@ -62,7 +121,6 @@ public class AES {
             }
         }
 
-        System.out.println(Arrays.deepToString(newState));
         return newState;
     }
 
@@ -93,7 +151,22 @@ public class AES {
         return sbox;
     }
 
+    static byte HexToByte(String hexString) {
+        int first = Character.digit(hexString.charAt(0), 16);
+        int second = Character.digit(hexString.charAt(1), 16);
+        byte result = (byte) ((first << 4) + second);
+        return result;
+    }
+
+    static String ByteToHex(byte num) {
+        char[] hexDigits = new char[2];
+        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
+        hexDigits[1] = Character.forDigit((num & 0xF), 16);
+        return new String(hexDigits);
+    }
+
     static String [][] initState(String [] text) {
+
         String [][] initState = new String [4][4];
 
         for(int r = 0; r < initState.length; r++) {
@@ -104,4 +177,14 @@ public class AES {
 
         return initState;
     }
+
+    // public static byte[] ConvertToByteArr(String inputStr) {
+    //     byte [] result = new byte [16];
+    //     int n = 0;
+    //     for (int i = 0; i  < result.length; i++) {
+    //         result[i] = StrToByte(inputStr.substring(n, n+2));
+    //         n+=2;
+    //     }
+    //     return result;
+    // }
 }
