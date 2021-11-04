@@ -34,8 +34,10 @@ public class AES {
                 System.out.println(Arrays.toString(text));
                 String [][] state = initState(text);
                 System.out.println(Arrays.deepToString(state));
-                state = MixColumns(state);
+                state = SubBytes(state, true);
                 System.out.println(Arrays.deepToString(state));
+                // state = MixColumns(state);
+                // System.out.println(Arrays.deepToString(state));
                 //-----------------------------TEST-------------------------------------------------------
             } catch(FileNotFoundException e) {
                 System.out.println("No such file in the directory");
@@ -83,25 +85,41 @@ public class AES {
     }
 
     private static byte Mult(byte a, byte b) {
-		byte result = 0;
+        byte result = 0;
         byte aCarry = 0;
-		byte bCarry = 0;
-        boolean spin = true;
-		while (spin) {
-            aCarry = (byte) (a & 0x01);         //carry over bit of a
-			if (aCarry == 1) {
-                result = (byte) (result ^ b);   //addition in case {01}
+        byte bCarry = 0;
+        int [] ones = new int [8];
+        byte [] powers = new byte [8];
+
+        for (int i = 0; i < ones.length; i++) {
+            aCarry = (byte) (a & 0x01);
+            a = (byte) ((a & 0xff) >> 1);
+            if(aCarry == 1) {
+                ones[i] = 1;
             }
-			bCarry = (byte) (b & 0x80);         // carry over bit of b
-			b = (byte) (b << 1);                //left shift by 1
-			if (bCarry == -128) {
-                b = (byte) (b ^ 0x1b);
+            else ones[i] = 0;
+        }
+
+        for(int i = 0; i < powers.length; i++) {
+            if (i == 0) powers[i] = b;
+            else {
+                bCarry = (byte) (b & 0x80);
+                b = (byte) (b << 1);
+                if (bCarry == -128) {
+                    b = (byte) (b ^ 0x1b);
+                }
+                powers[i] = b;
             }
-			a = (byte) ((a & 0xff) >> 1);       // divide a by 2
-            if(a == 0) spin = !spin;
-		}
-		return result;
-	}
+        }
+
+        for(int i = 0; i < ones.length; i++) {
+            if(ones[i] == 1) {
+                result = (byte) (result ^ powers[i]);
+            } 
+        }
+        
+        return result;
+    }
 
     static String [][] InvShiftRows(String [][] state) {
         String [][] newState = new String [4][4];
@@ -160,9 +178,9 @@ public class AES {
         return newState;
     }
 
-    static String [][] SubBytes(String [][] state) {
+    static String [][] SubBytes(String [][] state, boolean inverse) {
         String [][] newState = new String [4][4];
-        String [][] sbox = sbox();
+        String [][] sbox = sbox(inverse);
         
         for(int r = 0; r < newState.length; r++) {
             for(int c = 0; c < newState.length; c++) {
@@ -182,18 +200,24 @@ public class AES {
         return yx;
     }
 
-    static String [][] sbox() {
-        String [][] sbox = new String [16][16]; 
+    static String [][] sbox(boolean inverse) {
+        String [][] sbox = new String [16][16];
+        File source = null;
+        if(inverse) {
+            source = new File("inv_sbox.txt");
+        } else {
+            source = new File("sbox.txt");
+        }
         try {
             int row = 0;
-            Scanner scanner = new Scanner(new File("sbox.txt"));
+            Scanner scanner = new Scanner(source);
             while(scanner.hasNext()) {
                 String str = scanner.nextLine();
                 String [] strSplit = str.split("\\s+");
                 sbox[row] = strSplit.clone();
                 row++;
             }
-
+            scanner.close();
         } catch(Exception e) {
             System.out.println("Error reading sbox");
             System.exit(0);
@@ -201,18 +225,18 @@ public class AES {
         return sbox;
     }
 
-    static byte HexToByte(String hexString) {
-        int first = Character.digit(hexString.charAt(0), 16);
-        int second = Character.digit(hexString.charAt(1), 16);
+    static byte HexToByte(String str) {
+        int first = Character.digit(str.charAt(0), 16);
+        int second = Character.digit(str.charAt(1), 16);
         byte result = (byte) ((first << 4) + second);
         return result;
     }
 
     static String ByteToHex(byte num) {
-        char[] hexDigits = new char[2];
-        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
-        hexDigits[1] = Character.forDigit((num & 0xF), 16);
-        return new String(hexDigits);
+        char[] str = new char[2];
+        str[0] = Character.forDigit((num >> 4) & 0xf, 16);
+        str[1] = Character.forDigit((num & 0xf), 16);
+        return new String(str);
     }
 
     static String [][] initState(String [] text) {
