@@ -5,10 +5,10 @@ public class hello {
 
         byte a = (byte) 0x0b;
         byte b = (byte) 0x1e;
-        // System.out.println(Mult(a, b));
         System.out.println(mult2((byte)0x01,(byte) 0x01));
-        System.out.println(Mult(a, b));
     }
+
+
 
     private static byte mult2(byte a, byte b) {
         byte result = 0;
@@ -43,30 +43,9 @@ public class hello {
                 result = (byte) (result ^ powers[i]);
             } 
         }
-        
+
         return result;
     } 
-
-    private static byte Mult(byte a, byte b) {
-		byte result = 0;
-		byte bCarry = 0;
-        byte aCarry = 0;
-        boolean spin = true;
-		while (spin) {
-            aCarry = (byte) (a & 0x01);
-			if (aCarry == 1) {
-                result = (byte) (result ^ b);
-            }
-			bCarry = (byte) (b & 0x80);
-			b = (byte) (b << 1);
-			if (bCarry == -128) {
-                b = (byte) (b ^ 0x1b);
-            }
-			a = (byte) ((a & 0xff) >> 1);
-            if(a == 0) spin = !spin;
-		}
-		return result;
-	}
 
     static String ByteToHex(byte num) {
         char[] hexDigits = new char[2];

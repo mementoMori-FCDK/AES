@@ -1,3 +1,5 @@
+/*Grygoriy Bezshaposhnikov A3 */
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -34,10 +36,8 @@ public class AES {
                 System.out.println(Arrays.toString(text));
                 String [][] state = initState(text);
                 System.out.println(Arrays.deepToString(state));
-                state = SubBytes(state, true);
+                state = InvMixColumns(state);
                 System.out.println(Arrays.deepToString(state));
-                // state = MixColumns(state);
-                // System.out.println(Arrays.deepToString(state));
                 //-----------------------------TEST-------------------------------------------------------
             } catch(FileNotFoundException e) {
                 System.out.println("No such file in the directory");
@@ -51,6 +51,37 @@ public class AES {
 
     static String cipher() {
         return "";
+    }
+
+    static String [][] InvMixColumns(String [][] state) {
+        String [][] newState = new String [4][4];
+        byte [][] byteState = new byte [4][4];
+        byte [][] newByteState = new byte [4][4];
+        byte [][] matrix = {{0x0e, 0x0b, 0x0d, 0x09}, {0x09, 0x0e, 0x0b, 0x0d}, {0x0d, 0x09, 0x0e, 0x0b}, {0x0b, 0x0d, 0x09, 0x0e}};
+        for(int r = 0; r < state.length; r++) {
+            for(int c = 0; c < state.length; c++) {
+                byteState[r][c] = HexToByte(state[r][c]);
+            }
+        }
+        
+        for(int c = 0; c < byteState.length; c++) {
+            newByteState[0][c] = (byte) (Mult(byteState[0][c], matrix[0][0]) ^ Mult(byteState[1][c], matrix[0][1]) 
+                                            ^ Mult(byteState[2][c], matrix[0][2]) ^ Mult(byteState[3][c], matrix[0][3]));
+            newByteState[1][c] = (byte) (Mult(byteState[0][c], matrix[1][0]) ^ Mult(byteState[1][c], matrix[1][1]) 
+                                            ^ Mult(byteState[2][c], matrix[1][2]) ^ Mult(byteState[3][c], matrix[1][3]));
+            newByteState[2][c] = (byte) (Mult(byteState[0][c], matrix[2][0]) ^ Mult(byteState[1][c], matrix[2][1]) 
+                                            ^ Mult(byteState[2][c], matrix[2][2]) ^ Mult(byteState[3][c], matrix[2][3]));
+            newByteState[3][c] = (byte) (Mult(byteState[0][c], matrix[3][0]) ^ Mult(byteState[1][c], matrix[3][1]) 
+                                            ^ Mult(byteState[2][c], matrix[3][2]) ^ Mult(byteState[3][c], matrix[3][3]));
+        }
+
+        for(int r = 0; r < newState.length; r ++) {
+            for (int c = 0; c < newState.length; c++) {
+                newState[r][c] = ByteToHex(newByteState[r][c]);
+            }
+        }
+
+        return newState;
     }
 
     static String [][] MixColumns(String [][] state) {
@@ -117,7 +148,6 @@ public class AES {
                 result = (byte) (result ^ powers[i]);
             } 
         }
-        
         return result;
     }
 
