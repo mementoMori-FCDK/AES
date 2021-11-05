@@ -5,10 +5,11 @@ public class hello {
 
         byte a = (byte) 0x0b;
         byte b = (byte) 0x1e;
-        System.out.println(mult2((byte)0x01,(byte) 0x01));
+        int [][] arr = new int [5][4];
+        for(int r = 0; r < arr.length; r++) {
+            System.out.println(Arrays.toString(arr[0]));
+        }
     }
-
-
 
     private static byte mult2(byte a, byte b) {
         byte result = 0;

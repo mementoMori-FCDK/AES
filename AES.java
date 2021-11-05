@@ -31,13 +31,19 @@ public class AES {
                     System.exit(0);
                 }
                 //-----------------------------TEST-------------------------------------------------------
-                // System.out.println("key: " + keyStr);
                 String [] text = textStr.split("\\s+");
-                System.out.println(Arrays.toString(text));
                 String [][] state = initState(text);
-                System.out.println(Arrays.deepToString(state));
-                state = InvMixColumns(state);
-                System.out.println(Arrays.deepToString(state));
+
+                System.out.println("key: " + keyStr);
+                String [] key = keyStr.split("\\s+");
+                System.out.println(Arrays.toString(key));
+                KeyExpanshion(key);
+                // String [] text = textStr.split("\\s+");
+                // System.out.println(Arrays.toString(text));
+                // String [][] state = initState(text);
+                // System.out.println(Arrays.deepToString(state));
+                // state = InvMixColumns(state);
+                // System.out.println(Arrays.deepToString(state));
                 //-----------------------------TEST-------------------------------------------------------
             } catch(FileNotFoundException e) {
                 System.out.println("No such file in the directory");
@@ -49,8 +55,96 @@ public class AES {
         }
     }
 
-    static String cipher() {
+    static String encryp() {
         return "";
+    }
+
+    static String [][] KeyExpanshion(String [] key){
+        int nb = 4;
+        int nk = 4;
+        int nr = 10;
+        String [] temp = new String [4];
+        String [][] schedule = new String [44][4];
+        int i = 0;
+        while (i < nk) {
+            for(int j = 0; j < schedule[0].length; j++) {
+                schedule[i][j] = key[4*i + j];
+            }
+            i++;
+        }
+
+        i = nk;
+
+        while(i < (nb * (nr+1))) {
+            temp = schedule[i - 1];
+            if((i % nk) == 0) {
+                String [] rw = RotWord(temp);
+                // System.out.println("----------------------");
+                // System.out.println("i: " + i);
+                // System.out.println("RotWord: " + Arrays.toString(rw));
+                String [] sb = SubWord(rw);
+                //System.out.println("SubWord: " + Arrays.toString(sb));
+                temp = XOR(Rcon(i/nk), sb);
+                // System.out.println("After XOR: " + Arrays.toString(temp));
+                // System.out.println(Arrays.toString(temp) + "|" + Arrays.toString(Rcon(i/nk)));
+                // System.out.println("----------------------");
+            }
+            schedule[i] = XOR(schedule[i - nk], temp);
+            i++;
+        }
+
+        for(int r = 0; r < schedule.length; r++) {
+            System.out.println(r + ": " + Arrays.toString(schedule[r]));
+        }
+        
+        return schedule;
+    }
+
+    static String [] XOR (String [] a, String [] b) {
+        String [] result = new String [4];
+        for(int i = 0; i < a.length; i++) {
+            result[i] = ByteToHex((byte) (HexToByte(a[i]) ^ HexToByte(b[i])));
+        }
+        return result;
+    }
+
+    static String [] Rcon(int n) {
+        String [] rCon = new String [4];
+        byte rVal = (byte) 0x01;
+        byte mult = (byte) 0x02;
+        int i = 1;
+        while(i != n) {
+            rVal = Mult(rVal, mult);
+            i++;
+        }
+        for(int j = 1; j < rCon.length; j++) {
+            rCon[j] = ByteToHex((byte) 0x00);
+        }
+        rCon[0] = ByteToHex(rVal);
+
+        return rCon;
+    }
+
+    static String [] RotWord(String [] word) {
+        String [] result = new String [4]; 
+        String tmp = word[0];
+        for(int i = 0; i < word.length - 1; i++) {
+            result[i] = word[i + 1];
+        }
+        result[3] = tmp;
+
+        return result;
+    }
+
+    static String [] SubWord(String [] word) {
+        String [] result = new String [4];
+        String [][] sbox = sbox(false);
+
+        for(int i = 0; i < word.length; i ++) {
+            int [] yx = SboxYX(word[i]);
+            result[i] = sbox[yx[0]][yx[1]];
+        }
+        return result;
     }
 
     static String [][] InvMixColumns(String [][] state) {
@@ -209,17 +303,16 @@ public class AES {
     }
 
     static String [][] SubBytes(String [][] state, boolean inverse) {
-        String [][] newState = new String [4][4];
         String [][] sbox = sbox(inverse);
         
-        for(int r = 0; r < newState.length; r++) {
-            for(int c = 0; c < newState.length; c++) {
+        for(int r = 0; r < state.length; r++) {
+            for(int c = 0; c < state.length; c++) {
                 int [] yx = SboxYX(state[r][c]);
-                newState[r][c] = sbox[yx[0]][yx[1]];
+                state[r][c] = sbox[yx[0]][yx[1]];
             }
         }
 
-        return newState;
+        return state;
     }
 
     static int [] SboxYX(String stateByte) {
