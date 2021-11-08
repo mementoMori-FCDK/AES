@@ -1,4 +1,4 @@
-/*Grygoriy Bezshaposhnikov A3 */
+/*Grygoriy Bezshaposhnikov 7824369 A3 */
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -83,6 +83,7 @@ public class AES {
                 System.out.print(state[c][r]);
             }   
         }
+        System.out.println("");
         return state;
     }
     
